@@ -260,6 +260,8 @@ def add_nx_layer(n, g, name, node_attr = {"name":[], "type":[]}, edge_attr = {"n
         elif type == "string":
             add_attributes(n, attributes=[attr], type="string", target="vertex", layer=name)
             values = [el[1] for el in g.nodes(data=attr, default="")]
+            ## Added set values here. Copied from above, no test
+            set_values_ml(n, attr, vertices=vertices, values=vertex_attr(g)[[attr]])
         else: print("[Warning] wrong attribute type")
     edges = {
         "from_actor": [e[0] for e in g.edges()],
@@ -268,6 +270,22 @@ def add_nx_layer(n, g, name, node_attr = {"name":[], "type":[]}, edge_attr = {"n
         "to_layer": [name] * g.size()
     }
     add_edges(n, edges)
+    # Add edge attributes from nx
+    for attr,e_type in zip(edge_attr["name"],edge_attr["type"]):
+        if e_type=="numeric" or e_type=="string":
+            add_attributes(n, attributes=[attr], type=e_type, target="edge", layer=name)
+            # @ todo: test on CB
+            # Result (for (Di)Graphs: dict, {(u,v):val}
+            attbs=nx.get_edge_attributes(g,attr)
+            edge_a={
+                "from_actor": [e_tuple[0] for e_tuple in attbs.keys()]
+                "from_layer": [name] * len(attbs.keys())
+                "to_actor": [e_tuple[1] for e_tuple in attbs.keys()]
+                "to_layer": [name] * len(attbs.keys())
+            }
+            edge_v=[val for val in attbs[(edge_a["from_actor"],edge_a["to_actor"])]]
+            set_values_ml(m, attr, edges=edge_a, values=edge_v)
+        else: print("[Warning] wrong attribute type")
 
 
 
